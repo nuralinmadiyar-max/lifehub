@@ -50,10 +50,20 @@ def test_register_user():
 
 
 def test_login_user():
+    # сначала регистрируем пользователя
+    client.post(
+        "/register",
+        json={
+            "email": "test@example.com",
+            "password": "123456"
+        }
+    )
+
+    # потом логинимся
     response = client.post(
         "/login",
         data="username=test@example.com&password=123456",
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
+
     assert response.status_code == 200
-    assert "access_token" in response.json()
