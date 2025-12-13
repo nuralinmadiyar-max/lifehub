@@ -39,4 +39,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Docker Compose config check
-        run: docker compose config
+  run: docker compose -f docker-compose.yml config
