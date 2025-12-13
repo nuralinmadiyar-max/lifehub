@@ -11,18 +11,20 @@ from auth import create_access_token
 
 app = FastAPI()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
 
 def hash_password(password: str) -> str:
-    # bcrypt-safe: всегда 32 байта
-    sha = hashlib.sha256(password.encode("utf-8")).digest()
-    return pwd_context.hash(sha)
+    return pwd_context.hash(password)
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    sha = hashlib.sha256(password.encode("utf-8")).digest()
-    return pwd_context.verify(sha, hashed)
+    return pwd_context.verify(password, hashed)
+
+
 
 
 @app.post("/register")
