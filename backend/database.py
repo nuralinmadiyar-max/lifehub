@@ -1,16 +1,21 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "sqlite:///./lifehub.db"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///./lifehub.db"  # fallback, если env не задан
+)
 
 engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
+    DATABASE_URL,
+    echo=True,
 )
 
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=engine,
 )
 
 Base = declarative_base()
