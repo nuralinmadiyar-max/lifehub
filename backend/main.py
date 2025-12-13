@@ -40,11 +40,12 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 @app.post("/login")
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.email == form_data.username).first()
-    if not verify_password(form_data.password, user.hashed_password):
-    raise HTTPException(status_code=400, detail="Invalid credentials")
 
-    token = create_access_token({"sub": user.email})
-    return {"access_token": token, "token_type": "bearer"}
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    access_token = create_access_token({"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
