@@ -25,11 +25,21 @@ def create_access_token(data: dict):
 
 @app.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    hashed = pwd_context.hash(user.password)
-    db_user = User(email=user.email, hashed_password=hashed)
+    raw_password = user.password
+
+    # 🔒 bcrypt-safe (максимум 72 байта)
+    safe_password = raw_password[:72]
+
+    hashed = pwd_context.hash(safe_password)
+
+    db_user = User(
+        email=user.email,
+        hashed_password=hashed
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
     return {"email": db_user.email}
 
 
@@ -39,8 +49,12 @@ def login(
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.email == form_data.username).first()
+
+    safe_password = form_data.password[:72]
+
     if not user or not pwd_context.verify(
-        form_data.password, user.hashed_password
+        safe_password,
+        user.hashed_password
     ):
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
