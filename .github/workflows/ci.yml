@@ -30,7 +30,7 @@ jobs:
           cd backend
           python -c "import main"
 
-    docker:
+  docker:
     name: Docker validation
     runs-on: ubuntu-latest
 
