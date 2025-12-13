@@ -1,5 +1,3 @@
-import bcrypt
-import hashlib
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -7,24 +5,10 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import User
 from schemas import UserCreate
-from auth import create_access_token
+from auth import create_access_token, hash_password, verify_password
 
-
-
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(
-        password.encode("utf-8"),
-        bcrypt.gensalt()
-    ).decode("utf-8")
-
-
-def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(
-        password.encode("utf-8"),
-        hashed.encode("utf-8")
-    )
-
-
+# ❗ ОБЯЗАТЕЛЬНО ДО РОУТОВ
+app = FastAPI()
 
 
 @app.post("/register")
