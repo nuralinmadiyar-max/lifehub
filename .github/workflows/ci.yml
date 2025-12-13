@@ -1,18 +1,19 @@
-name: LifeHub CI
+name: Backend CI
 
 on:
   push:
-    branches: [ "main" ]
+    paths:
+      - "backend/**"
   pull_request:
-    branches: [ "main" ]
+    paths:
+      - "backend/**"
 
 jobs:
-  backend:
-    name: Backend checks
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -20,23 +21,13 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install backend dependencies
+      - name: Install dependencies
+        working-directory: backend
         run: |
-          cd backend
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Backend import check
+      - name: Run tests
+        working-directory: backend
         run: |
-          cd backend
-          python -c "import main"
-
-  docker:
-    name: Docker validation
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Docker Compose config check
-        run: docker compose -f docker-compose.yml config
+          python -m pytest
