@@ -1,45 +1,37 @@
+import hashlib
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from pydantic import BaseModel
 
-from database import Base, engine, get_db
+from database import get_db
 from models import User
-
-Base.metadata.create_all(bind=engine)
+from schemas import UserCreate
+from auth import create_access_token
 
 app = FastAPI()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-class UserCreate(BaseModel):
-    email: str
-    password: str
+def hash_password(password: str) -> str:
+    # bcrypt-safe: всегда 32 байта
+    sha = hashlib.sha256(password.encode("utf-8")).digest()
+    return pwd_context.hash(sha)
 
 
-def create_access_token(data: dict):
-    return "fake-jwt-token"
+def verify_password(password: str, hashed: str) -> bool:
+    sha = hashlib.sha256(password.encode("utf-8")).digest()
+    return pwd_context.verify(sha, hashed)
 
 
 @app.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    raw_password = user.password
-
-    # 🔒 bcrypt-safe (максимум 72 байта)
-    safe_password = raw_password[:72]
-
-    hashed = pwd_context.hash(safe_password)
-
-    db_user = User(
-        email=user.email,
-        hashed_password=hashed
-    )
+    hashed = hash_password(user.password)
+    db_user = User(email=user.email, hashed_password=hashed)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-
     return {"email": db_user.email}
 
 
@@ -49,14 +41,8 @@ def login(
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.email == form_data.username).first()
-
-    safe_password = form_data.password[:72]
-
-    if not user or not pwd_context.verify(
-        safe_password,
-        user.hashed_password
-    ):
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
-    access_token = create_access_token({"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    token = create_access_token({"sub": user.email})
+    return {"access_token": token, "token_type": "bearer"}
