@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import User
-from schemas import UserCreate
-from auth import create_access_token, hash_password, verify_password
+from auth import verify_password, create_access_token
 
 # ❗ ОБЯЗАТЕЛЬНО ДО РОУТОВ
 app = FastAPI()
@@ -32,4 +31,7 @@ def login(
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
     access_token = create_access_token({"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
